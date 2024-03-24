@@ -283,11 +283,13 @@ def convert_ath_json(json_dir):  # dir contains json annotations and images
 def convert_coco_json(
     json_dir,
     output_dir,
+    keyMap: list = None, 
     use_segments=False,
     cls91to80=False,
 ):
     """Converts COCO JSON format to YOLO label format, with options for segments and class mapping."""
-    save_dir = make_dirs(output_dir)  # output directory
+    # save_dir = make_dirs(output_dir)  # output directory
+    save_dir = output_dir
     coco80 = coco91_to_coco80_class()
 
     # Import json
@@ -295,7 +297,7 @@ def convert_coco_json(
         fn = (
             Path(save_dir) / "labels" / json_file.stem.replace("instances_", "")
         )  # folder name
-        fn.mkdir()
+        # fn.mkdir()
         with open(json_file) as f:
             data = json.load(f)
 
@@ -324,10 +326,11 @@ def convert_coco_json(
                 if box[2] <= 0 or box[3] <= 0:  # if w <= 0 and h <= 0
                     continue
 
+                rowCls = int(ann["category_id"]) - 1 if keyMap is None else keyMap[int(ann["category_id"]) - 1]
                 cls = (
-                    coco80[int(ann["category_id"]) - 1]
+                    coco80[rowCls]
                     if cls91to80
-                    else ann["category_id"] - 1
+                    else rowCls
                 )  # class
                 box = [cls] + box.tolist()
                 if box not in bboxes:
